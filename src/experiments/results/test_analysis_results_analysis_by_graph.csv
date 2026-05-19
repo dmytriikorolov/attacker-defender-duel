@@ -1,0 +1,2 @@
+graph,games,attacker_wins,defender_wins,attacker_win_rate,mean_total_damage,mean_final_damage_ratio,mean_edges
+"Erdos-Renyi G(n,p)",24,16,8,0.6667,11.0417,2.2377,7.6667

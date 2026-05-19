@@ -1,5 +1,6 @@
 """Streamlit UI for one network interdiction simulation."""
 
+import time
 from types import SimpleNamespace
 
 import matplotlib.pyplot as plt
@@ -33,7 +34,9 @@ DEFENDERS = {
 EDGE_STYLES = {
     "normal": {"edge_color": "#b8b8b8", "width": 1.4},
     "shortest_path": {"edge_color": "#111111", "width": 5.0},
-    "protected": {"edge_color": "#f0a202", "width": 5.0, "style": "dashdot"},
+    "protected": {"edge_color": "#2ca02c", "width": 5.0},
+    "protected_path_base": {"edge_color": "#111111", "width": 6.0},
+    "protected_path_stripe": {"edge_color": "#2ca02c", "width": 4.0, "style": (0, (3, 3))},
     "attacked": {"edge_color": "#d62728", "width": 4.0, "style": "dashed"},
 }
 
@@ -137,6 +140,9 @@ def draw_graph(G, pos, title, protected_edges=None, attacked_edges=None, shortes
     """Draw graph with protected, attacked, and shortest-path edges highlighted."""
     protected, attacked = edge_set(protected_edges), edge_set(attacked_edges)
     path_edges = set(edges_from_path(shortest_path))
+    protected_path = protected & path_edges
+    path_only = path_edges - protected_path
+    protected_only = protected - protected_path
     highlighted = protected | attacked | path_edges
 
     fig, ax = plt.subplots(figsize=(7, 5))
@@ -148,8 +154,10 @@ def draw_graph(G, pos, title, protected_edges=None, attacked_edges=None, shortes
 
     normal = [e for e in G.edges() if normalize_edge(e) not in highlighted]
     _draw_edges(G, pos, normal, ax, **EDGE_STYLES["normal"])
-    _draw_edges(G, pos, path_edges, ax, **EDGE_STYLES["shortest_path"])
-    _draw_edges(G, pos, protected, ax, **EDGE_STYLES["protected"])
+    _draw_edges(G, pos, path_only, ax, **EDGE_STYLES["shortest_path"])
+    _draw_edges(G, pos, protected_only, ax, **EDGE_STYLES["protected"])
+    _draw_edges(G, pos, protected_path, ax, **EDGE_STYLES["protected_path_base"])
+    _draw_edges(G, pos, protected_path, ax, **EDGE_STYLES["protected_path_stripe"])
     _draw_edges(G, pos, attacked, ax, **EDGE_STYLES["attacked"])
 
     nx.draw_networkx_edge_labels(G, pos, edge_labels=nx.get_edge_attributes(G, "weight"), ax=ax)
@@ -167,8 +175,9 @@ def edge_label(edges):
 def show_legend():
     """Show graph styling in text so color is not the only signal."""
     st.caption(
-        "Legend: shortest path = thick black line; protected edge = orange "
-        "dash-dot line; attacked edge = red dashed line; normal edge = thin gray."
+        "Legend: shortest path = thick black line; defended/protected edge = "
+        "thick green line; protected shortest-path edge = green/black striped "
+        "line; attacked edge = red dashed line; normal edge = thin gray."
     )
 
 
@@ -211,6 +220,18 @@ def main():
         defense_budget = st.slider("Defense budget", 0, 8, 2)
         attack_multiplier = st.slider("Attack multiplier", 1.0, 10.0, 5.0, 0.5)
         max_rounds = st.slider("Number of rounds", 1, 20, 5)
+        presentation_mode = st.toggle(
+            "Presentation mode",
+            help="Automatically play one round after a short delay.",
+        )
+        presentation_delay = st.slider(
+            "Presentation delay (seconds)",
+            0.5,
+            5.0,
+            1.5,
+            0.5,
+            disabled=not presentation_mode,
+        )
         attacker_name = st.selectbox("Attacker strategy", list(ATTACKERS))
         defender_name = st.selectbox(
             "Defender strategy",
@@ -276,6 +297,11 @@ def main():
     score_cols[0].metric("Round", f"{round_count} / {active_max_rounds}")
     score_cols[1].metric("Attacker score", attacker_score)
     score_cols[2].metric("Defender objective", "minimize score")
+    if presentation_mode and not settings_changed:
+        if round_count < active_max_rounds:
+            st.info(f"Presentation mode is running. Next round in {presentation_delay:.1f}s.")
+        else:
+            st.success("Presentation mode finished all rounds.")
     show_legend()
 
     pos = game["positions"]
@@ -339,6 +365,11 @@ def main():
             for result in history
         ]
         st.dataframe(pd.DataFrame(history_rows), hide_index=True, use_container_width=True)
+
+    if presentation_mode and not settings_changed and round_count < active_max_rounds:
+        time.sleep(presentation_delay)
+        play_next_ui_round(params)
+        st.rerun()
 
 
 if __name__ == "__main__":
