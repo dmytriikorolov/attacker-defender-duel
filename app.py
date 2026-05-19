@@ -7,28 +7,22 @@ import networkx as nx
 import pandas as pd
 import streamlit as st
 
-from src.attacker.greedy_attacker import GreedyAttacker
-from src.attacker.random_attacker import RandomAttacker
-from src.attacker.shortest_path_attacker import ShortestPathAttacker
-from src.defender.centrality_defender import CentralityDefender
-from src.defender.greedy_defender import GreedyDefender
-from src.defender.random_defender import RandomDefender
-from src.graph_generator import GRAPH_GENERATORS
 from src.graph_utils import apply_attack, edge_set, edges_from_path, normalize_edge
+from src.registry import ATTACKERS, DEFENDERS, GRAPH_GENERATORS
 from src.simulation import run_simulation
 
-# name -> factory(params). Adding a strategy = one line here, no UI changes.
-ATTACKERS = {
-    "Random": lambda p: RandomAttacker(p.attack_budget),
-    "Shortest path": lambda p: ShortestPathAttacker(p.attack_budget),
-    "Greedy": lambda p: GreedyAttacker(p.attack_budget, p.attack_multiplier),
-}
-DEFENDERS = {
-    "None": lambda p: None,
-    "Random": lambda p: RandomDefender(p.defense_budget),
-    "Centrality": lambda p: CentralityDefender(p.defense_budget),
-    "Greedy": lambda p: GreedyDefender(p.defense_budget, p.attack_budget, p.attack_multiplier),
-}
+
+def compute_layout(G, seed):
+    """Stable, evenly spread positions; reuse geometric coords if present."""
+    pos = nx.get_node_attributes(G, "pos")
+    if len(pos) == G.number_of_nodes():
+        return {n: tuple(xy) for n, xy in pos.items()}
+    try:
+        # Deterministic (no random jitter between reruns), even spacing,
+        # and weight=None so random edge weights don't fling nodes away.
+        return nx.kamada_kawai_layout(G, weight=None)
+    except Exception:
+        return nx.spring_layout(G, weight=None, iterations=200, seed=seed)
 
 
 def _draw_edges(G, pos, edges, ax, **style):
@@ -43,20 +37,29 @@ def draw_graph(G, pos, title, protected_edges=None, attacked_edges=None, shortes
     path_edges = set(edges_from_path(shortest_path))
     highlighted = protected | attacked | path_edges
 
+    n = G.number_of_nodes()
+    node_size = max(250, 1100 - 45 * n)
+    font_size = 11 if n <= 10 else 8
+    show_weights = G.number_of_edges() <= 25
+
     fig, ax = plt.subplots(figsize=(7, 5))
     ax.set_title(title)
-    ax.axis("off")
 
-    nx.draw_networkx_nodes(G, pos, node_color="#f8f2dc", edgecolors="#2b2b2b", ax=ax)
-    nx.draw_networkx_labels(G, pos, ax=ax)
+    nx.draw_networkx_nodes(G, pos, node_size=node_size, node_color="#f8f2dc", edgecolors="#2b2b2b", ax=ax)
+    nx.draw_networkx_labels(G, pos, font_size=font_size, ax=ax)
 
     normal = [e for e in G.edges() if normalize_edge(e) not in highlighted]
-    _draw_edges(G, pos, normal, ax, edge_color="#b0b0b0")
+    _draw_edges(G, pos, normal, ax, edge_color="#b0b0b0", width=1.0)
     _draw_edges(G, pos, path_edges, ax, edge_color="#2ca02c", width=4)
     _draw_edges(G, pos, protected, ax, edge_color="#1f77b4", width=4)
     _draw_edges(G, pos, attacked, ax, edge_color="#d62728", width=3, style="dashed")
 
-    nx.draw_networkx_edge_labels(G, pos, edge_labels=nx.get_edge_attributes(G, "weight"), ax=ax)
+    if show_weights:
+        nx.draw_networkx_edge_labels(G, pos, edge_labels=nx.get_edge_attributes(G, "weight"), font_size=font_size, ax=ax)
+
+    ax.set_aspect("equal")
+    ax.margins(0.12)
+    ax.axis("off")
     return fig
 
 
@@ -90,7 +93,7 @@ def main():
     result = run_simulation(G, source, target, attacker, protected_edges=protected_edges, attack_multiplier=attack_multiplier)
     attacked_graph = apply_attack(G, result["attacked_edges"], protected_edges, attack_multiplier)
 
-    pos = nx.spring_layout(G, seed=seed)
+    pos = compute_layout(G, seed)
     left, right = st.columns(2)
     with left:
         st.pyplot(draw_graph(G, pos, "Before attack", protected_edges=protected_edges, shortest_path=result["baseline_path"]))
