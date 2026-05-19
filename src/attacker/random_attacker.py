@@ -10,11 +10,6 @@ class RandomAttacker(BaseAttacker):
     """Choose random unprotected edges up to the attack budget."""
 
     def select_edges(self, G, source, target, protected_edges=None):
-        protected = edge_set(protected_edges)
-        candidates = [
-            normalize_edge(edge)
-            for edge in G.edges()
-            if normalize_edge(edge) not in protected
-        ]
+        candidates = [normalize_edge(edge) for edge in G.edges() if normalize_edge(edge) not in edge_set(protected_edges)]
         random.shuffle(candidates)
         return candidates[: self.budget]

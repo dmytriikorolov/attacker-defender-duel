@@ -1,12 +1,7 @@
 """Greedy attacker strategy."""
 
 from src.attacker.base_attacker import BaseAttacker
-from src.graph_utils import (
-    apply_attack,
-    edge_set,
-    get_shortest_path_length,
-    normalize_edge,
-)
+from src.graph_utils import (apply_attack, edge_set, get_shortest_path_length, normalize_edge)
 
 
 class GreedyAttacker(BaseAttacker):
@@ -27,32 +22,17 @@ class GreedyAttacker(BaseAttacker):
         selected = []
 
         for _ in range(self.budget):
-            current_graph = apply_attack(
-                G,
-                selected,
-                protected,
-                self.attack_multiplier,
-            )
+            current_graph = apply_attack(G, selected, protected, self.attack_multiplier)
             current_length = get_shortest_path_length(current_graph, source, target)
 
             best_edge = None
             best_length = current_length
 
-            candidates = [
-                normalize_edge(edge)
-                for edge in G.edges()
-                if normalize_edge(edge) not in protected
-                and normalize_edge(edge) not in selected
-            ]
+            candidates = [normalize_edge(edge) for edge in G.edges() if normalize_edge(edge) not in protected and normalize_edge(edge) not in selected]
 
             for edge in candidates:
                 trial_edges = selected + [edge]
-                trial_graph = apply_attack(
-                    G,
-                    trial_edges,
-                    protected,
-                    self.attack_multiplier,
-                )
+                trial_graph = apply_attack(G, trial_edges, protected, self.attack_multiplier)
                 trial_length = get_shortest_path_length(trial_graph, source, target)
 
                 if trial_length > best_length:
@@ -61,6 +41,7 @@ class GreedyAttacker(BaseAttacker):
 
             if best_edge is None:
                 break
+            
             selected.append(best_edge)
 
         return selected

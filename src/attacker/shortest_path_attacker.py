@@ -15,22 +15,17 @@ class ShortestPathAttacker(BaseAttacker):
     """
 
     def select_edges(self, G, source, target, protected_edges=None):
-        protected = edge_set(protected_edges)
-        path = get_shortest_path(G, source, target)
         selected = []
 
-        for edge in edges_from_path(path):
-            if edge not in protected and edge not in selected:
+        for edge in edges_from_path(get_shortest_path(G, source, target)):
+            if edge not in edge_set(protected_edges) and edge not in selected:
                 selected.append(edge)
+
             if len(selected) == self.budget:
                 return selected
 
-        remaining = [
-            normalize_edge(edge)
-            for edge in G.edges()
-            if normalize_edge(edge) not in protected
-            and normalize_edge(edge) not in selected
-        ]
+        remaining = [normalize_edge(edge) for edge in G.edges() if normalize_edge(edge) not in edge_set(protected_edges) and normalize_edge(edge) not in selected]
+
         random.shuffle(remaining)
         selected.extend(remaining[: self.budget - len(selected)])
         return selected
