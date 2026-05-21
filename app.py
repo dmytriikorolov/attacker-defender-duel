@@ -11,19 +11,59 @@ import streamlit as st
 from src.registry import ATTACKERS, DEFENDERS, GRAPH_GENERATORS
 from src.graph_utils import edge_set, edges_from_path, normalize_edge
 from src.game import play_round, total_attacker_score
+from src.metrics import compute_vulnerability_metrics
 
 
 def compute_layout(G, seed):
     """Stable, evenly spread positions; reuse geometric coords if present."""
     pos = nx.get_node_attributes(G, "pos")
     if len(pos) == G.number_of_nodes():
-        return {n: tuple(xy) for n, xy in pos.items()}
+        return normalize_layout({n: tuple(xy) for n, xy in pos.items()})
     try:
         # Deterministic (no random jitter between reruns), even spacing,
         # and weight=None so random edge weights don't fling nodes away.
-        return nx.kamada_kawai_layout(G, weight=None)
+        return normalize_layout(nx.kamada_kawai_layout(G, weight=None))
     except Exception:
-        return nx.spring_layout(G, weight=None, iterations=200, seed=seed)
+        return normalize_layout(nx.spring_layout(G, weight=None, iterations=200, seed=seed))
+
+
+def normalize_layout(pos):
+    """Scale any layout to a consistent -1..1 drawing box."""
+    if not pos:
+        return pos
+
+    xs = [xy[0] for xy in pos.values()]
+    ys = [xy[1] for xy in pos.values()]
+    min_x, max_x = min(xs), max(xs)
+    min_y, max_y = min(ys), max(ys)
+    center_x = (min_x + max_x) / 2
+    center_y = (min_y + max_y) / 2
+    scale = max(max_x - min_x, max_y - min_y, 0.1) / 2
+
+    return {
+        node: ((xy[0] - center_x) / scale, (xy[1] - center_y) / scale)
+        for node, xy in pos.items()
+    }
+
+
+def fit_graph_axes(ax, pos, padding=0.22):
+    """Set stable plot bounds so graph drawings are not cropped or tiny."""
+    if not pos:
+        return
+
+    xs = [xy[0] for xy in pos.values()]
+    ys = [xy[1] for xy in pos.values()]
+    min_x, max_x = min(xs), max(xs)
+    min_y, max_y = min(ys), max(ys)
+    width = max(max_x - min_x, 0.1)
+    height = max(max_y - min_y, 0.1)
+    span = max(width, height)
+    center_x = (min_x + max_x) / 2
+    center_y = (min_y + max_y) / 2
+    radius = span * (0.5 + padding)
+
+    ax.set_xlim(center_x - radius, center_x + radius)
+    ax.set_ylim(center_y - radius, center_y + radius)
 
 EDGE_STYLES = {
     "normal": {"edge_color": "#b8b8b8", "width": 1.4},
@@ -89,7 +129,7 @@ def start_game(params, source, target, attacker_name, defender_name):
         "defender_name": defender_name,
         "max_rounds": params.max_rounds,
         "settings_key": settings_key(params, source, target, attacker_name, defender_name),
-        "positions": nx.spring_layout(initial_graph, seed=params.seed),
+        "positions": compute_layout(initial_graph, params.seed),
         "blocked_edges": set(),
     }
 
@@ -130,7 +170,15 @@ def _draw_edges(G, pos, edges, ax, **style):
         nx.draw_networkx_edges(G, pos, edgelist=list(edges), ax=ax, **style)
 
 
-def draw_graph(G, pos, title, protected_edges=None, attacked_edges=None, shortest_path=None):
+def draw_graph(
+    G,
+    pos,
+    title,
+    protected_edges=None,
+    attacked_edges=None,
+    shortest_path=None,
+    figsize=(7, 5),
+):
     """Draw graph with protected, attacked, and shortest-path edges highlighted."""
     protected, attacked = edge_set(protected_edges), edge_set(attacked_edges)
     path_edges = set(edges_from_path(shortest_path))
@@ -140,15 +188,32 @@ def draw_graph(G, pos, title, protected_edges=None, attacked_edges=None, shortes
     highlighted = protected | attacked | path_edges
 
     n = G.number_of_nodes()
-    node_size = max(250, 1100 - 45 * n)
-    font_size = 11 if n <= 10 else 8
+    node_size = max(160, 720 - 32 * n)
+    font_size = 9 if n <= 10 else 7
+    edge_font_size = 7 if n <= 10 else 6
     show_weights = G.number_of_edges() <= 25
 
-    fig, ax = plt.subplots(figsize=(7, 5))
+    fig, ax = plt.subplots(figsize=figsize)
     ax.set_title(title)
+    fig.patch.set_facecolor("#f6f4ef")
+    ax.set_facecolor("#f6f4ef")
 
-    nx.draw_networkx_nodes(G, pos, node_size=node_size, node_color="#f8f2dc", edgecolors="#2b2b2b", ax=ax)
-    nx.draw_networkx_labels(G, pos, font_size=font_size, ax=ax)
+    nx.draw_networkx_nodes(
+        G,
+        pos,
+        node_size=node_size,
+        node_color="#e9f1f7",
+        edgecolors="#334155",
+        linewidths=1.0,
+        ax=ax,
+    )
+    nx.draw_networkx_labels(
+        G,
+        pos,
+        font_size=font_size,
+        font_color="#1f2937",
+        ax=ax,
+    )
 
     normal = [e for e in G.edges() if normalize_edge(e) not in highlighted]
     _draw_edges(G, pos, normal, ax, **EDGE_STYLES["normal"])
@@ -159,10 +224,23 @@ def draw_graph(G, pos, title, protected_edges=None, attacked_edges=None, shortes
     _draw_edges(G, pos, attacked, ax, **EDGE_STYLES["attacked"])
 
     if show_weights:
-        nx.draw_networkx_edge_labels(G, pos, edge_labels=nx.get_edge_attributes(G, "weight"), font_size=font_size, ax=ax)
+        nx.draw_networkx_edge_labels(
+            G,
+            pos,
+            edge_labels=nx.get_edge_attributes(G, "weight"),
+            font_size=edge_font_size,
+            font_color="#374151",
+            bbox={
+                "boxstyle": "round,pad=0.12",
+                "facecolor": "#fffaf0",
+                "edgecolor": "none",
+                "alpha": 0.82,
+            },
+            ax=ax,
+        )
 
     ax.set_aspect("equal")
-    ax.margins(0.12)
+    fit_graph_axes(ax, pos)
     ax.axis("off")
     return fig
 
@@ -182,6 +260,47 @@ def show_legend():
         "thick green line; protected shortest-path edge = green/black striped "
         "line; attacked edge = red dashed line; normal edge = thin gray."
     )
+
+
+def show_vulnerability_metrics(G, source, target):
+    """Show structural graph metrics that explain attack surface."""
+    metrics = compute_vulnerability_metrics(G, source, target)
+    labels = {
+        "edge_connectivity": "Edge connectivity",
+        "shortest_path_count": "Shortest paths",
+        "shortest_path_edge_count": "Shortest-path edges",
+        "bridge_count": "Bridge edges",
+        "betweenness_concentration": "Centrality concentration",
+        "alternative_path_ratio": "Alternative path ratio",
+    }
+    explanations = {
+        "edge_connectivity": "Minimum number of edges that must be removed to disconnect source from target. Higher means more redundant routes.",
+        "shortest_path_count": "Number of equally best source-target shortest paths. Higher means the attacker has more paths to disrupt.",
+        "shortest_path_edge_count": "Number of edges on the current chosen shortest path. Longer paths give both players more possible target edges.",
+        "bridge_count": "Number of edges whose removal disconnects part of the graph. Bridges are bottlenecks and usually make the graph fragile.",
+        "betweenness_concentration": "How much shortest-path traffic is concentrated on the single most central edge. Closer to 1 means one edge dominates.",
+        "alternative_path_ratio": "Length of the best edge-disjoint alternative route divided by current shortest-path length. Higher means rerouting is expensive; infinity means no edge-disjoint alternative exists.",
+    }
+    rows = [
+        {"Metric": labels[key], "Value": value, "Info": "i"}
+        for key, value in metrics.items()
+    ]
+    with st.expander("Graph vulnerability metrics", expanded=False):
+        st.dataframe(
+            pd.DataFrame(rows),
+            hide_index=True,
+            use_container_width=True,
+            column_config={
+                "Info": st.column_config.TextColumn(
+                    "ⓘ",
+                    help="\n\n".join(
+                        f"{labels[key]}: {explanations[key]}"
+                        for key in labels
+                    ),
+                    width="small",
+                )
+            },
+        )
 
 
 def show_round_action_log(result):
@@ -306,6 +425,7 @@ def main():
         else:
             st.success("Presentation mode finished all rounds.")
     show_legend()
+    show_vulnerability_metrics(game["current_graph"], game["source"], game["target"])
 
     pos = game["positions"]
     if history:
@@ -351,10 +471,15 @@ def main():
         st.write(f"Protected edges: `{edge_label(last['protected_edges'])}`")
         st.write(f"Attacked edges: `{edge_label(last['attacked_edges'])}`")
     else:
-        _, center, _ = st.columns([1, 2, 1])
+        _, center, _ = st.columns([0.8, 1.6, 0.8])
         with center:
             st.pyplot(
-                draw_graph(game["current_graph"], pos, "Initial graph"),
+                draw_graph(
+                    game["current_graph"],
+                    pos,
+                    "Initial graph",
+                    figsize=(5.8, 4.1),
+                ),
                 clear_figure=True,
                 use_container_width=True,
             )

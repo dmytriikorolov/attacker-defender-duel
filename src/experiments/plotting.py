@@ -42,6 +42,12 @@ NUMERIC_FIELDS = {
     "unique_attacked_edges",
     "mean_protected_edges",
     "runtime_seconds",
+    "edge_connectivity",
+    "shortest_path_count",
+    "shortest_path_edge_count",
+    "bridge_count",
+    "betweenness_concentration",
+    "alternative_path_ratio",
 }
 
 

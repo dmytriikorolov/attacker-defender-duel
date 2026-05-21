@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from src.game import run_game
 from src.graph_utils import get_shortest_path_length
+from src.metrics import compute_vulnerability_metrics
 from src.registry import ATTACKERS, DEFENDERS, GRAPH_GENERATORS
 
 
@@ -61,8 +62,9 @@ def run_one_game(
 
     initial_length = get_shortest_path_length(G, source, target)
     final_length = get_shortest_path_length(game["final_graph"], source, target)
+    vulnerability = compute_vulnerability_metrics(G, source, target)
 
-    return {
+    record = {
         "graph": graph,
         "attacker": attacker,
         "defender": defender,
@@ -88,6 +90,13 @@ def run_one_game(
         "mean_protected_edges": sum(protected_counts) / len(protected_counts) if protected_counts else 0,
         "runtime_seconds": round(runtime_seconds, 4),
     }
+    record.update(
+        {
+            key: round(value, 4) if isinstance(value, float) else value
+            for key, value in vulnerability.items()
+        }
+    )
+    return record
 
 
 def main():

@@ -37,11 +37,20 @@ to keep the shortest path distance as small as possible.
   - Random defender
   - Centrality defender
   - Greedy defender
+  - Minimax defender
 - Single-run command line demo.
 - Interactive Streamlit UI.
 - Multi-round game mode.
 - Presentation mode that plays rounds automatically.
+- Mixed-strategy simulation helpers.
+- Graph vulnerability metrics:
+  - edge connectivity
+  - number of shortest paths
+  - bridge count
+  - centrality concentration
+  - alternative path ratio
 - Batch experiments for statistics.
+- Budget sensitivity experiments.
 - Plot generation for experiment results.
 
 ## Project Structure
@@ -142,6 +151,50 @@ src/experiments/results/
 src/experiments/figures/
 ```
 
+Run the whole experiment pipeline in one command:
+
+```bash
+python3 -B src/experiments/run_all.py --preset smoke
+```
+
+Run a focused budget sensitivity experiment:
+
+```bash
+python3 -B src/experiments/budget_sensitivity.py --max-attack-budget 4 --max-defense-budget 4
+```
+
+## Advanced Strategies And Metrics
+
+`Minimax` is the most game-theoretic defender. For small graphs it enumerates
+every possible defense set and every possible attacker response, then chooses
+the defense that minimizes the attacker's best achievable damage. For larger
+graphs it uses the shortest path plus high-centrality edges as a smaller
+candidate set so the UI stays usable.
+
+The project also computes vulnerability metrics for the current source-target
+pair. These metrics help explain why some graphs are easier to defend than
+others:
+
+- Low edge connectivity means there are few independent ways to travel from
+  source to target.
+- A low number of shortest paths means the attacker has a clear target.
+- Many bridges mean the graph has structural bottlenecks.
+- High centrality concentration means a few edges carry most important paths.
+- A high alternative path ratio means rerouting after damage is expensive.
+
+## Key Findings
+
+- Sparse graphs are usually easier for the attacker because there are fewer
+  alternative paths after a successful attack.
+- Centrality-style defense is fast and works well when important edges are also
+  structurally central.
+- Greedy defense is stronger than random defense but can miss worst-case
+  attacker responses.
+- Minimax defense is the most rigorous on small graphs because it models the
+  attacker's best response directly.
+- Defense budgets have diminishing returns once the main shortest-path
+  bottlenecks are already protected.
+
 ## Basic Testing
 
 Check that the Python files compile:
@@ -160,6 +213,12 @@ Run the UI:
 
 ```bash
 streamlit run app.py
+```
+
+Run the automated unit tests:
+
+```bash
+python3 -B -m unittest discover -s tests
 ```
 
 ## Notes For Git
@@ -196,3 +255,5 @@ git commit -m "Add network interdiction game documentation"
 - The defender strategies are included for the game demo, but the main focus of
   this part of the project is graph utilities, attackers, simulation logic,
   statistics, and UI.
+- Exact minimax search is exponential, so large graphs use a candidate-edge
+  approximation.
