@@ -1,3 +1,0 @@
-graph,attacker,defender,games,mean_total_damage,median_total_damage,mean_final_ratio,mean_round_damage,mean_runtime_seconds
-"Erdos-Renyi G(n,p)",Random,None,16,7.0625,2.0,1.8566,2.3542,0.0004
-"Erdos-Renyi G(n,p)",Random,Random,8,19.0,19.0,3.0,6.3333,0.0003

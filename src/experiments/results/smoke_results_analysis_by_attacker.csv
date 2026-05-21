@@ -1,4 +1,0 @@
-attacker,games,attacker_wins,defender_wins,attacker_win_rate,mean_total_damage,mean_final_damage_ratio,mean_edges
-Greedy,320,259,61,0.8094,13.7937,2.405,10.25
-Random,320,153,167,0.4781,8.5687,1.8001,10.25
-Shortest path,320,254,66,0.7937,12.7688,2.3477,10.25

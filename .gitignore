@@ -1,0 +1,27 @@
+# Virtual environments
+.venv/
+venv/
+.venmv/
+
+# Python cache/build files
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/
+dist/
+*.egg-info/
+
+# IDE/local OS files
+.idea/
+.vscode/
+.DS_Store
+
+# Generated experiment outputs
+src/experiments/results/
+src/experiments/figures/
+
+# Generated presentation notes
+docs/presentation_notes.*

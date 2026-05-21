@@ -1,5 +1,0 @@
-defender,games,attacker_wins,defender_wins,attacker_win_rate,mean_total_damage,mean_final_damage_ratio,mean_edges
-Centrality,240,128,112,0.5333,9.1875,1.8533,10.25
-Greedy,240,132,108,0.55,9.8958,1.9104,10.25
-None,240,206,34,0.8583,14.0958,2.5216,10.25
-Random,240,200,40,0.8333,13.6625,2.4517,10.25
