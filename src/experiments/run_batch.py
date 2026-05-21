@@ -1,56 +1,188 @@
-"""Sweep MANY configurations - the tournament.
+"""Run parameter sweeps for multi-round network interdiction games.
 
-The interesting question this answers: which defender holds up best,
-against which attacker, on which graph topology? We run every
-defender x attacker x graph-model combo across several seeds, collect
-the metrics into one tidy DataFrame, dump it to results.csv, and print
-a quick pivot so you see the answer without opening the file.
+The literal Cartesian product of every reasonable value can be huge. This
+script therefore provides presets:
 
-    python -m experiments.run_batch
-
-Cost note: GreedyDefender internally simulates a greedy attacker, so
-the full grid is the slow part. Shrink the lists below if it drags.
+    smoke     quick correctness check
+    standard  broad enough for project statistics
+    full      much larger sweep; use --estimate first
 """
 
+import argparse
+import csv
 import sys
+from itertools import product
 from pathlib import Path
+from statistics import mean, median
 
-import pandas as pd
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
-from experiments.run_single import run_one
+from src.experiments.run_single import run_one_game
 from src.registry import ATTACKERS, DEFENDERS, GRAPH_GENERATORS
 
-# The experiment grid. This *is* the experiment - tweak it freely.
-GRAPHS = list(GRAPH_GENERATORS)
-ATTACKER_NAMES = list(ATTACKERS)
-DEFENDER_NAMES = list(DEFENDERS)
-SEEDS = list(range(5))
-OVERRIDES = dict(node_count=10, edge_probability=0.35, attack_budget=3, defense_budget=3, attack_multiplier=5.0)
 
-RESULTS_CSV = Path(__file__).parent / "results.csv"
+RESULTS_DIR = Path(__file__).parent / "results"
+
+PRESETS = {
+    "smoke": {
+        "nodes": [5, 10],
+        "densities": [0.35],
+        "seeds": [0, 1],
+        "attack_budgets": [1, 2],
+        "defense_budgets": [0, 2],
+        "multipliers": [3.0],
+        "rounds": [3],
+        "graphs": list(GRAPH_GENERATORS),
+        "attackers": list(ATTACKERS),
+        "defenders": list(DEFENDERS),
+    },
+    "standard": {
+        "nodes": [5, 10, 15, 20],
+        "densities": [0.35, 0.6],
+        "seeds": list(range(13)),
+        "attack_budgets": [1, 2],
+        "defense_budgets": [0, 2],
+        "multipliers": [2.0, 5.0],
+        "rounds": [5],
+        "graphs": list(GRAPH_GENERATORS),
+        "attackers": list(ATTACKERS),
+        "defenders": list(DEFENDERS),
+    },
+    "full": {
+        "nodes": list(range(5, 21)),
+        "densities": [0.2, 0.35, 0.5, 0.7],
+        "seeds": list(range(13)),
+        "attack_budgets": [1, 2, 3, 4],
+        "defense_budgets": [0, 1, 2, 3, 4],
+        "multipliers": [2.0, 3.0, 5.0, 10.0],
+        "rounds": [5],
+        "graphs": list(GRAPH_GENERATORS),
+        "attackers": list(ATTACKERS),
+        "defenders": list(DEFENDERS),
+    },
+}
 
 
-def run_sweep():
-    """Run the whole grid and return a tidy DataFrame (one row per run)."""
-    combos = [(g, a, d, s) for g in GRAPHS for a in ATTACKER_NAMES for d in DEFENDER_NAMES for s in SEEDS]
+def iter_configs(preset):
+    """Yield all configurations in a preset."""
+    keys = [
+        "graphs",
+        "attackers",
+        "defenders",
+        "nodes",
+        "densities",
+        "seeds",
+        "attack_budgets",
+        "defense_budgets",
+        "multipliers",
+        "rounds",
+    ]
+    for values in product(*(preset[key] for key in keys)):
+        yield dict(zip(keys, values))
+
+
+def estimate_count(preset):
+    """Return how many games a preset will run."""
+    total = 1
+    for values in preset.values():
+        total *= len(values)
+    return total
+
+
+def run_sweep(preset_name, limit=None):
+    """Run a preset sweep and return a list of flat records."""
+    preset = PRESETS[preset_name]
     rows = []
-    for i, (graph, attacker, defender, seed) in enumerate(combos, start=1):
-        print(f"[{i}/{len(combos)}] {graph} | {attacker} vs {defender} | seed {seed}")
-        rows.append(run_one(graph, attacker, defender, seed=seed, **OVERRIDES))
-    return pd.DataFrame(rows)
+    total = estimate_count(preset)
+
+    for index, config in enumerate(iter_configs(preset), start=1):
+        if limit is not None and index > limit:
+            break
+
+        print(
+            f"[{index}/{total}] "
+            f"{config['graphs']} | {config['attackers']} vs {config['defenders']} | "
+            f"n={config['nodes']} density={config['densities']} seed={config['seeds']} | "
+            f"a={config['attack_budgets']} d={config['defense_budgets']} m={config['multipliers']}"
+        )
+        rows.append(
+            run_one_game(
+                graph=config["graphs"],
+                attacker=config["attackers"],
+                defender=config["defenders"],
+                node_count=config["nodes"],
+                edge_probability=config["densities"],
+                seed=config["seeds"],
+                attack_budget=config["attack_budgets"],
+                defense_budget=config["defense_budgets"],
+                attack_multiplier=config["multipliers"],
+                rounds=config["rounds"],
+            )
+        )
+
+    return rows
+
+
+def write_csv(rows, path):
+    """Write flat records to a CSV file."""
+    if not rows:
+        return
+
+    with path.open("w", newline="") as file:
+        writer = csv.DictWriter(file, fieldnames=list(rows[0]))
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def summarize(rows):
+    """Create compact aggregate statistics for reports."""
+    groups = {}
+    for row in rows:
+        key = (row["graph"], row["attacker"], row["defender"])
+        groups.setdefault(key, []).append(row)
+
+    summary = []
+    for (graph, attacker, defender), group in sorted(groups.items()):
+        summary.append(
+            {
+                "graph": graph,
+                "attacker": attacker,
+                "defender": defender,
+                "games": len(group),
+                "mean_total_damage": round(mean(row["total_damage"] for row in group), 4),
+                "median_total_damage": round(median(row["total_damage"] for row in group), 4),
+                "mean_final_ratio": round(mean(row["final_damage_ratio"] for row in group), 4),
+                "mean_round_damage": round(mean(row["mean_round_damage"] for row in group), 4),
+                "mean_runtime_seconds": round(mean(row["runtime_seconds"] for row in group), 4),
+            }
+        )
+    return summary
 
 
 def main():
-    df = run_sweep()
-    df.to_csv(RESULTS_CSV, index=False)
+    parser = argparse.ArgumentParser(description="Run statistics sweeps.")
+    parser.add_argument("--preset", choices=PRESETS, default="smoke")
+    parser.add_argument("--estimate", action="store_true", help="Only print number of games.")
+    parser.add_argument("--limit", type=int, help="Run only the first N games.")
+    parser.add_argument("--output", default=None, help="CSV output path.")
+    args = parser.parse_args()
 
-    # Lower damage_ratio = the attack achieved less = the defender did better.
-    summary = df.pivot_table(values="damage_ratio", index="defender", columns="attacker", aggfunc="mean").round(3)
-    print("\nMean damage_ratio (averaged over graphs and seeds):\n")
-    print(summary.to_string())
-    print(f"\nSaved {len(df)} runs to {RESULTS_CSV}")
+    preset = PRESETS[args.preset]
+    count = estimate_count(preset)
+    print(f"Preset {args.preset!r} contains {count} games.")
+    if args.estimate:
+        return
+
+    RESULTS_DIR.mkdir(exist_ok=True)
+    output = Path(args.output) if args.output else RESULTS_DIR / f"{args.preset}_results.csv"
+    summary_output = output.with_name(output.stem + "_summary.csv")
+
+    rows = run_sweep(args.preset, limit=args.limit)
+    write_csv(rows, output)
+    write_csv(summarize(rows), summary_output)
+
+    print(f"\nSaved raw results to {output}")
+    print(f"Saved summary to {summary_output}")
 
 
 if __name__ == "__main__":

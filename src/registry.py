@@ -17,11 +17,16 @@ ATTACKERS = {
     "Shortest path": lambda p: ShortestPathAttacker(p.attack_budget),
     "Greedy": lambda p: GreedyAttacker(p.attack_budget, p.attack_multiplier),
 }
+
 DEFENDERS = {
     "None": lambda p: None,
     "Random": lambda p: RandomDefender(p.defense_budget),
     "Centrality": lambda p: CentralityDefender(p.defense_budget),
-    "Greedy": lambda p: GreedyDefender(p.defense_budget, p.attack_budget, p.attack_multiplier),
+    "Greedy": lambda p: GreedyDefender(
+        p.defense_budget,
+        p.attack_budget,
+        p.attack_multiplier,
+    ),
 }
 
 __all__ = ["ATTACKERS", "DEFENDERS", "GRAPH_GENERATORS"]

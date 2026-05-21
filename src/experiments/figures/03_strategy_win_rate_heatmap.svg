@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="402">
+<rect width="100%" height="100%" fill="white"/>
+<text x="320.0" y="32" font-size="20" text-anchor="middle" font-family="Arial" font-weight="bold">Attacker Win Rate by Strategy Matchup</text>
+<text x="255.0" y="72" font-size="11" text-anchor="middle" font-family="Arial" font-weight="normal" transform="rotate(-20 255.0 72)">Greedy</text>
+<text x="385.0" y="72" font-size="11" text-anchor="middle" font-family="Arial" font-weight="normal" transform="rotate(-20 385.0 72)">Random</text>
+<text x="515.0" y="72" font-size="11" text-anchor="middle" font-family="Arial" font-weight="normal" transform="rotate(-20 515.0 72)">Shortest path</text>
+<text x="180" y="123.0" font-size="12" text-anchor="end" font-family="Arial" font-weight="normal">Centrality</text>
+<rect x="190" y="90" width="130" height="58" fill="rgb(255,175,175)" stroke="#444"/>
+<text x="255.0" y="123.0" font-size="12" text-anchor="middle" font-family="Arial" font-weight="bold">62%</text>
+<rect x="320" y="90" width="130" height="58" fill="rgb(255,245,245)" stroke="#444"/>
+<text x="385.0" y="123.0" font-size="12" text-anchor="middle" font-family="Arial" font-weight="bold">36%</text>
+<rect x="450" y="90" width="130" height="58" fill="rgb(255,178,178)" stroke="#444"/>
+<text x="515.0" y="123.0" font-size="12" text-anchor="middle" font-family="Arial" font-weight="bold">61%</text>
+<text x="180" y="181.0" font-size="12" text-anchor="end" font-family="Arial" font-weight="normal">Greedy</text>
+<rect x="190" y="148" width="130" height="58" fill="rgb(255,168,168)" stroke="#444"/>
+<text x="255.0" y="181.0" font-size="12" text-anchor="middle" font-family="Arial" font-weight="bold">65%</text>
+<rect x="320" y="148" width="130" height="58" fill="rgb(255,245,245)" stroke="#444"/>
+<text x="385.0" y="181.0" font-size="12" text-anchor="middle" font-family="Arial" font-weight="bold">36%</text>
+<rect x="450" y="148" width="130" height="58" fill="rgb(255,171,171)" stroke="#444"/>
+<text x="515.0" y="181.0" font-size="12" text-anchor="middle" font-family="Arial" font-weight="bold">64%</text>
+<text x="180" y="239.0" font-size="12" text-anchor="end" font-family="Arial" font-weight="normal">None</text>
+<rect x="190" y="206" width="130" height="58" fill="rgb(255,75,75)" stroke="#444"/>
+<text x="255.0" y="239.0" font-size="12" text-anchor="middle" font-family="Arial" font-weight="bold">100%</text>
+<rect x="320" y="206" width="130" height="58" fill="rgb(255,181,181)" stroke="#444"/>
+<text x="385.0" y="239.0" font-size="12" text-anchor="middle" font-family="Arial" font-weight="bold">60%</text>
+<rect x="450" y="206" width="130" height="58" fill="rgb(255,81,81)" stroke="#444"/>
+<text x="515.0" y="239.0" font-size="12" text-anchor="middle" font-family="Arial" font-weight="bold">98%</text>
+<text x="180" y="297.0" font-size="12" text-anchor="end" font-family="Arial" font-weight="normal">Random</text>
+<rect x="190" y="264" width="130" height="58" fill="rgb(255,84,84)" stroke="#444"/>
+<text x="255.0" y="297.0" font-size="12" text-anchor="middle" font-family="Arial" font-weight="bold">96%</text>
+<rect x="320" y="264" width="130" height="58" fill="rgb(255,185,185)" stroke="#444"/>
+<text x="385.0" y="297.0" font-size="12" text-anchor="middle" font-family="Arial" font-weight="bold">59%</text>
+<rect x="450" y="264" width="130" height="58" fill="rgb(255,88,88)" stroke="#444"/>
+<text x="515.0" y="297.0" font-size="12" text-anchor="middle" font-family="Arial" font-weight="bold">95%</text>
+</svg>

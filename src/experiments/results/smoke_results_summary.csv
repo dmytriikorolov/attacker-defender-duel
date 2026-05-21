@@ -1,0 +1,61 @@
+graph,attacker,defender,games,mean_total_damage,median_total_damage,mean_final_ratio,mean_round_damage,mean_runtime_seconds
+"Erdos-Renyi G(n,p)",Greedy,Centrality,16,8.4375,2.0,1.9375,2.8125,0.0017
+"Erdos-Renyi G(n,p)",Greedy,Greedy,16,11.8125,10.5,2.136,3.9375,0.0178
+"Erdos-Renyi G(n,p)",Greedy,None,16,16.875,18.0,2.875,5.625,0.0018
+"Erdos-Renyi G(n,p)",Greedy,Random,16,16.875,18.0,2.875,5.625,0.0017
+"Erdos-Renyi G(n,p)",Random,Centrality,16,5.8125,0.0,1.5625,1.9375,0.0005
+"Erdos-Renyi G(n,p)",Random,Greedy,16,7.5,3.0,1.7721,2.5,0.0162
+"Erdos-Renyi G(n,p)",Random,None,16,11.6875,17.5,2.1801,3.8958,0.0004
+"Erdos-Renyi G(n,p)",Random,Random,16,9.0625,2.0,1.9816,3.0208,0.0004
+"Erdos-Renyi G(n,p)",Shortest path,Centrality,16,8.4375,2.0,1.9375,2.8125,0.0005
+"Erdos-Renyi G(n,p)",Shortest path,Greedy,16,11.5,10.5,2.1176,3.8333,0.016
+"Erdos-Renyi G(n,p)",Shortest path,None,16,16.875,18.0,2.875,5.625,0.0004
+"Erdos-Renyi G(n,p)",Shortest path,Random,16,15.75,18.0,2.75,5.25,0.0004
+"Fixed edge count G(n,m)",Greedy,Centrality,16,12.5,10.0,2.1447,4.1667,0.0018
+"Fixed edge count G(n,m)",Greedy,Greedy,16,12.0,8.0,2.0972,4.0,0.0223
+"Fixed edge count G(n,m)",Greedy,None,16,20.0,23.0,2.95,6.6667,0.002
+"Fixed edge count G(n,m)",Greedy,Random,16,19.25,19.0,2.8894,6.4167,0.0019
+"Fixed edge count G(n,m)",Random,Centrality,16,9.0,7.0,1.6212,3.0,0.0005
+"Fixed edge count G(n,m)",Random,Greedy,16,8.25,1.0,1.5373,2.75,0.021
+"Fixed edge count G(n,m)",Random,None,16,13.5625,9.0,2.2786,4.5208,0.0004
+"Fixed edge count G(n,m)",Random,Random,16,13.875,15.0,2.0906,4.625,0.0004
+"Fixed edge count G(n,m)",Shortest path,Centrality,16,11.75,10.0,2.0697,3.9167,0.0006
+"Fixed edge count G(n,m)",Shortest path,Greedy,16,11.25,4.0,2.0222,3.75,0.0211
+"Fixed edge count G(n,m)",Shortest path,None,16,18.5,22.0,2.8,6.1667,0.0004
+"Fixed edge count G(n,m)",Shortest path,Random,16,18.0,21.0,2.7632,6.0,0.0004
+Geometric,Greedy,Centrality,16,16.75,9.5,2.1541,5.5833,0.0018
+Geometric,Greedy,Greedy,16,18.625,10.0,2.2327,6.2083,0.0173
+Geometric,Greedy,None,16,19.625,11.5,2.7506,6.5417,0.0019
+Geometric,Greedy,Random,16,19.375,11.5,2.7397,6.4583,0.0019
+Geometric,Random,Centrality,16,11.25,0.0,1.4755,3.75,0.0006
+Geometric,Random,Greedy,16,11.8125,1.0,1.7425,3.9375,0.016
+Geometric,Random,None,16,14.1875,2.5,1.9537,4.7292,0.0004
+Geometric,Random,Random,16,12.625,2.0,1.7618,4.2083,0.0005
+Geometric,Shortest path,Centrality,16,15.0625,7.5,2.088,5.0208,0.0006
+Geometric,Shortest path,Greedy,16,15.0625,7.5,2.0938,5.0208,0.016
+Geometric,Shortest path,None,16,15.375,7.5,2.5872,5.125,0.0004
+Geometric,Shortest path,Random,16,15.375,7.5,2.5872,5.125,0.0005
+Grid / lattice,Greedy,Centrality,16,9.9375,10.0,2.003,3.3125,0.0017
+Grid / lattice,Greedy,Greedy,16,11.375,10.0,2.125,3.7917,0.0174
+Grid / lattice,Greedy,None,16,16.375,16.0,2.75,5.4583,0.0018
+Grid / lattice,Greedy,Random,16,16.375,16.0,2.7156,5.4583,0.0017
+Grid / lattice,Random,Centrality,16,5.8125,2.0,1.6667,1.9375,0.0005
+Grid / lattice,Random,Greedy,16,4.25,2.0,1.5244,1.4167,0.0169
+Grid / lattice,Random,None,16,6.75,7.0,1.9225,2.25,0.0004
+Grid / lattice,Random,Random,16,8.9375,9.0,2.0973,2.9792,0.0004
+Grid / lattice,Shortest path,Centrality,16,9.75,10.0,1.9896,3.25,0.0006
+Grid / lattice,Shortest path,Greedy,16,11.875,12.0,2.1562,3.9583,0.0171
+Grid / lattice,Shortest path,None,16,15.75,16.0,2.7054,5.25,0.0004
+Grid / lattice,Shortest path,Random,16,15.0,16.0,2.6085,5.0,0.0005
+Scale-free (Barabasi-Albert),Greedy,Centrality,16,5.1875,2.5,1.8274,1.7292,0.0028
+Scale-free (Barabasi-Albert),Greedy,Greedy,16,5.4375,3.5,1.869,1.8125,0.0499
+Scale-free (Barabasi-Albert),Greedy,None,16,10.375,10.5,2.6548,3.4583,0.0031
+Scale-free (Barabasi-Albert),Greedy,Random,16,8.6875,10.0,2.3735,2.8958,0.0029
+Scale-free (Barabasi-Albert),Random,Centrality,16,3.0625,0.0,1.5104,1.0208,0.0006
+Scale-free (Barabasi-Albert),Random,Greedy,16,2.375,0.0,1.375,0.7917,0.0551
+Scale-free (Barabasi-Albert),Random,None,16,5.375,2.0,1.9167,1.7917,0.0004
+Scale-free (Barabasi-Albert),Random,Random,16,6.1875,6.0,2.0312,2.0625,0.0005
+Scale-free (Barabasi-Albert),Shortest path,Centrality,16,5.0625,2.5,1.8125,1.6875,0.0006
+Scale-free (Barabasi-Albert),Shortest path,Greedy,16,5.3125,3.5,1.8542,1.7708,0.0507
+Scale-free (Barabasi-Albert),Shortest path,None,16,10.125,10.0,2.625,3.375,0.0005
+Scale-free (Barabasi-Albert),Shortest path,Random,16,9.5625,10.0,2.5104,3.1875,0.0005

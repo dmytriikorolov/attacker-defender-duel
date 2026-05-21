@@ -1,0 +1,6 @@
+graph,games,attacker_wins,defender_wins,attacker_win_rate,mean_total_damage,mean_final_damage_ratio,mean_edges
+"Erdos-Renyi G(n,p)",192,129,63,0.6719,11.7188,2.25,9.5
+"Fixed edge count G(n,m)",192,146,46,0.7604,13.9948,2.272,10.0
+Geometric,192,135,57,0.7031,15.4271,2.1806,10.25
+Grid / lattice,192,142,50,0.7396,11.0156,2.1887,9.0
+Scale-free (Barabasi-Albert),192,114,78,0.5938,6.3958,2.03,12.5

@@ -5,6 +5,7 @@ import networkx as nx
 from src.attacker.greedy_attacker import GreedyAttacker
 from src.attacker.random_attacker import RandomAttacker
 from src.attacker.shortest_path_attacker import ShortestPathAttacker
+from src.game import run_game
 from src.simulation import run_simulation
 
 
@@ -68,6 +69,26 @@ def main():
             attack_multiplier=attack_multiplier,
         )
         print_result(name, result)
+
+    print("\nIterative Game Demo")
+    print("-------------------")
+    game = run_game(
+        G,
+        source,
+        target,
+        attacker_factory=lambda: GreedyAttacker(attack_budget, attack_multiplier),
+        defender_factory=None,
+        rounds=3,
+        attack_multiplier=attack_multiplier,
+    )
+    for result in game["history"]:
+        print(
+            f"Round {result['round']}: "
+            f"attacked {result['attacked_edges']}, "
+            f"distance {result['baseline_length']} -> {result['attacked_length']}, "
+            f"damage {result['damage']}"
+        )
+    print(f"Total attacker score: {game['attacker_score']}")
 
 
 if __name__ == "__main__":
